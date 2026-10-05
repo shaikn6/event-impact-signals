@@ -1,0 +1,156 @@
+"""Rule-based event-type classifier.
+
+Deterministic keyword matching, not a trained model — this mirrors the
+same tradeoff nano-finbert's SignalExtractor makes: a transparent,
+auditable rule set beats an opaque classifier when every output needs a
+traceable "why" for a research tool. Each category lists the phrases that
+trigger it; the category with the most/strongest matches wins. Confidence
+is the match strength, not a calibrated probability.
+"""
+
+from __future__ import annotations
+
+import re
+
+from eis.models import EventType
+
+# Keyword groups per event type. Multi-word phrases are checked as
+# substrings (not word-boundary tokens) so "trade war" still matches
+# "war_conflict" via its own phrase entry rather than requiring NLP.
+_KEYWORDS: dict[EventType, list[str]] = {
+    EventType.WAR_CONFLICT: [
+        "war",
+        "invasion",
+        "military strike",
+        "airstrike",
+        "ceasefire",
+        "troops",
+        "conflict escalates",
+        "armed clash",
+        "missile attack",
+        "combat",
+    ],
+    EventType.NATURAL_DISASTER: [
+        "earthquake",
+        "hurricane",
+        "wildfire",
+        "flood",
+        "tsunami",
+        "typhoon",
+        "tornado",
+        "volcanic eruption",
+        "drought",
+        "landslide",
+    ],
+    EventType.PANDEMIC_PUBLIC_HEALTH: [
+        "pandemic",
+        "outbreak",
+        "virus spreads",
+        "epidemic",
+        "vaccine",
+        "who declares",
+        "quarantine",
+        "public health emergency",
+    ],
+    EventType.TRADE_TARIFF: [
+        "tariff",
+        "trade war",
+        "import duty",
+        "export ban",
+        "trade deal",
+        "trade dispute",
+    ],
+    EventType.REGULATORY_SANCTION: [
+        "sanctions",
+        "antitrust",
+        "regulatory crackdown",
+        "fined by regulators",
+        "bans exports to",
+        "blacklist",
+    ],
+    EventType.MONETARY_POLICY: [
+        "rate hike",
+        "rate cut",
+        "federal reserve raises",
+        "federal reserve cuts",
+        "central bank raises",
+        "interest rates rise",
+        "interest rates fall",
+        "fomc",
+    ],
+    EventType.ENERGY_SHOCK: [
+        "oil price",
+        "opec",
+        "gas prices surge",
+        "energy crisis",
+        "oil supply disruption",
+        "crude oil jumps",
+    ],
+    EventType.LABOR_STRIKE: [
+        "workers strike",
+        "labor strike",
+        "union walkout",
+        "walkout",
+        "labor dispute",
+    ],
+    EventType.CYBERATTACK: [
+        "cyberattack",
+        "data breach",
+        "ransomware",
+        "hacked",
+        "security breach",
+    ],
+    EventType.EARNINGS_CORPORATE: [
+        "quarterly earnings",
+        "reports earnings",
+        "profit rose",
+        "profit fell",
+        "revenue beat",
+        "revenue miss",
+        "guidance cut",
+    ],
+}
+
+
+def classify_event(text: str) -> tuple[EventType, float]:
+    """Classify free text into one EventType with a match-strength score.
+
+    Args:
+        text: Article title (+ optional summary), any case.
+
+    Returns:
+        (event_type, confidence) — confidence in [0, 1], 0 when nothing matched
+        (EventType.GENERAL is returned in that case).
+    """
+    lowered = text.lower()
+
+    scores: dict[EventType, int] = {}
+    for event_type, phrases in _KEYWORDS.items():
+        # \b...\b so e.g. "war" matches the word "war" but not the
+        # substring inside "award" or "warranty". Score by phrase word
+        # count, not a flat +1 per match: "trade war" (2 words) should
+        # outweigh the single word "war" it contains, so a real trade-war
+        # headline isn't misclassified as armed conflict just because
+        # "war" is also, technically, a substring match for that category.
+        score = sum(
+            len(phrase.split())
+            for phrase in phrases
+            if re.search(rf"\b{re.escape(phrase)}\b", lowered)
+        )
+        if score:
+            scores[event_type] = score
+
+    if not scores:
+        return EventType.GENERAL, 0.0
+
+    # Tie-break policy (explicit, not an accident of dict order): when two
+    # categories score equally, prefer whichever is listed first in
+    # _KEYWORDS above. This matters for genuinely ambiguous text (e.g. a
+    # single-word hit landing in two categories at once); reordering
+    # _KEYWORDS changes tie-break outcomes, so treat its order as policy.
+    best_type = max(scores, key=lambda k: scores[k])
+    # Confidence saturates around 3 matched "phrase-words" — a single
+    # keyword hit is a weak signal, three independent words of evidence
+    # for the same category is strong.
+    confidence = min(1.0, scores[best_type] / 3.0)
+    return best_type, confidence
