@@ -10,6 +10,9 @@ from __future__ import annotations
 
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
+
+import httpx
 
 from eis.ingest import gdelt, rss
 from eis.pipeline import build_signals, filter_actionable
@@ -46,11 +49,23 @@ def poll_once(store: SignalStore, include_reddit: bool = False) -> int:
                          scheduled run doesn't depend on a flaky source.
     """
     articles = []
-    for i, query in enumerate(_GDELT_QUERIES):
-        if i > 0:
-            time.sleep(_GDELT_REQUEST_SPACING_SECONDS)
-        articles.extend(gdelt.fetch_articles(query, max_records=15))
-    articles.extend(rss.fetch_all())
+    # RSS is independent, different-host I/O with no relationship to
+    # GDELT's rate limit — run it in the background so it overlaps with
+    # the GDELT loop below instead of adding its own time after it. The
+    # GDELT loop itself is dominated by GDELT's own ~12-14s response
+    # latency per request, not by the 5s inter-query sleep (see README's
+    # "Known limitations") — this doesn't fix that, it just stops RSS
+    # from stacking more wall-clock time on top of it.
+    with ThreadPoolExecutor(max_workers=1) as rss_pool:
+        rss_future = rss_pool.submit(rss.fetch_all)
+
+        with httpx.Client() as client:
+            for i, query in enumerate(_GDELT_QUERIES):
+                if i > 0:
+                    time.sleep(_GDELT_REQUEST_SPACING_SECONDS)
+                articles.extend(gdelt.fetch_articles(query, max_records=15, client=client))
+
+        articles.extend(rss_future.result())
 
     if include_reddit:
         from eis.ingest import reddit

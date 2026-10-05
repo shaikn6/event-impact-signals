@@ -18,6 +18,7 @@ def fetch_json(
     params: dict | None = None,
     headers: dict | None = None,
     timeout: float = 10.0,
+    client: httpx.Client | None = None,
 ) -> dict | None:
     """GET `url` and return its parsed JSON body, or None on any failure.
 
@@ -25,9 +26,17 @@ def fetch_json(
     errors) and a non-JSON response body — both are treated identically
     by every caller here (as "no data this time"), so there's no reason
     for them to distinguish the two.
+
+    Args:
+        client: Optional shared httpx.Client, so a caller making several
+                same-host requests (e.g. gdelt.fetch_articles called once
+                per query) can reuse one TCP/TLS connection instead of
+                paying setup cost on every call. Defaults to a one-off
+                `httpx.get` when not given.
     """
+    getter = client.get if client is not None else httpx.get
     try:
-        response = httpx.get(url, params=params, headers=headers, timeout=timeout)
+        response = getter(url, params=params, headers=headers, timeout=timeout)
         response.raise_for_status()
         return response.json()
     except (httpx.HTTPError, ValueError):

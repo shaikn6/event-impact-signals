@@ -11,20 +11,35 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import httpx
+
 from eis.ingest._http import fetch_json
 from eis.models import Article
 
 _BASE_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 
 
-def fetch_articles(query: str, max_records: int = 25, timeout: float = 10.0) -> list[Article]:
+def fetch_articles(
+    query: str,
+    max_records: int = 25,
+    timeout: float = 25.0,
+    client: httpx.Client | None = None,
+) -> list[Article]:
     """Fetch recent English-language articles matching a GDELT query.
 
     Args:
         query:       GDELT query string, e.g. "war" or "earthquake sourcelang:eng".
                      English is forced if the caller doesn't already filter it.
         max_records: Max articles to return (GDELT caps this at 250).
-        timeout:     HTTP timeout in seconds.
+        timeout:     HTTP timeout in seconds. Default is 25s, not the more
+                     typical 10s — measured against the live API, GDELT's
+                     own response time regularly runs ~12-14s even for a
+                     successful request, so a 10s timeout was silently
+                     dropping good responses as if they'd failed.
+        client:      Optional shared httpx.Client — pass the same client
+                     across repeated calls (e.g. scheduler.py's 5 GDELT
+                     queries per poll) to reuse one connection instead of
+                     a fresh TCP/TLS handshake per call.
 
     Returns:
         List of Article. Returns an empty list (not an exception) on a
@@ -42,7 +57,7 @@ def fetch_articles(query: str, max_records: int = 25, timeout: float = 10.0) -> 
         "format": "json",
     }
 
-    payload = fetch_json(_BASE_URL, params=params, timeout=timeout)
+    payload = fetch_json(_BASE_URL, params=params, timeout=timeout, client=client)
     if payload is None:
         return []
 

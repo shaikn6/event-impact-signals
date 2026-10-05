@@ -7,6 +7,7 @@ signal-to-noise feed for mainstream financial/world news.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 
 import feedparser
@@ -52,12 +53,17 @@ def fetch_feed(feed_name: str, feed_url: str, timeout: float = 10.0) -> list[Art
 
 
 def fetch_all(feeds: dict[str, str] | None = None) -> list[Article]:
-    """Fetch every feed in `feeds` (default: DEFAULT_FEEDS) and flatten the results."""
+    """Fetch every feed in `feeds` (default: DEFAULT_FEEDS) and flatten the results.
+
+    Feeds are independent, different-host I/O with no rate-limit
+    relationship to each other, so they're fetched concurrently rather
+    than one after another — this doesn't change what's fetched, only
+    how long waiting for all of it takes.
+    """
     feeds = feeds if feeds is not None else DEFAULT_FEEDS
-    all_articles: list[Article] = []
-    for name, url in feeds.items():
-        all_articles.extend(fetch_feed(name, url))
-    return all_articles
+    with ThreadPoolExecutor(max_workers=max(1, len(feeds))) as pool:
+        results = pool.map(lambda item: fetch_feed(*item), feeds.items())
+    return [article for feed_articles in results for article in feed_articles]
 
 
 def _parse_entry_date(entry) -> datetime | None:
