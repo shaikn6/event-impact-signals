@@ -109,6 +109,24 @@ _KEYWORDS: dict[EventType, list[str]] = {
         "revenue miss",
         "guidance cut",
     ],
+    EventType.MERGER_ACQUISITION: [
+        "to acquire",
+        "acquisition of",
+        "merger with",
+        "agrees to merge",
+        "takeover bid",
+        "buyout deal",
+        "to be acquired by",
+    ],
+    EventType.SUPPLY_CHAIN_DISRUPTION: [
+        "chip shortage",
+        "semiconductor shortage",
+        "supply chain disruption",
+        "port congestion",
+        "shipping delays",
+        "factory shutdown",
+        "parts shortage",
+    ],
 }
 
 

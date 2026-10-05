@@ -30,6 +30,8 @@ _GDELT_QUERIES = [
     "(pandemic OR outbreak OR epidemic)",
     "(tariff OR sanctions)",
     "federal reserve rate",
+    "(acquisition OR merger OR takeover)",
+    "(chip shortage OR supply chain OR port congestion)",
 ]
 
 # GDELT asks that requests be spaced at least 5s apart; firing several

@@ -2,9 +2,10 @@
 
 A research tool that classifies real-world events (war, natural disaster,
 pandemic, trade dispute, monetary policy, energy shock, labor strike,
-cyberattack) from live news, and maps each one to the sectors it has
-historically tended to help or hurt — with a direction, confidence, and a
-one-line rationale for every impact it reports.
+cyberattack, mergers & acquisitions, supply chain disruption) from live
+news, and maps each one to the sectors it has historically tended to help
+or hurt — with a direction, confidence, and a one-line rationale for
+every impact it reports.
 
 **This is a signal/research surface, not investment advice.** Every output
 is a documented hypothesis ("war raises defense spending and oil-supply
@@ -86,16 +87,16 @@ you have to reason through by hand for every headline.
   fetch is treated as "no new posts," never as an error. For reliable
   Reddit data, register a free API app and switch `ingest/reddit.py` to
   OAuth — that's a documented upgrade path, not implemented here.
-- **A poll cycle takes roughly a minute, dominated by GDELT's own
+- **A poll cycle takes roughly two minutes, dominated by GDELT's own
   response latency, not sleep overhead.** GDELT rate-limits to one
-  request per ~5 seconds (the scheduler spaces its 5 queries accordingly
+  request per ~5 seconds (the scheduler spaces its 7 queries accordingly
   — don't lower `_GDELT_REQUEST_SPACING_SECONDS` without checking GDELT's
   current terms), but measured against the live API, GDELT's own
   response time regularly runs ~12-14s per request even when it
   succeeds — that's the real bottleneck, and the required spacing forces
-  those 5 requests to stay sequential against the same host. The
+  those 7 requests to stay sequential against the same host. The
   independent RSS fetch runs concurrently with all of that instead of
-  after it, and the 5 GDELT queries share one `httpx.Client` connection
+  after it, and the 7 GDELT queries share one `httpx.Client` connection
   to avoid a repeated TLS handshake — real but modest savings (RSS
   typically finishes in well under a second), not a fix for GDELT's own
   latency. `fetch_articles`'s default timeout is 25s, not the more usual

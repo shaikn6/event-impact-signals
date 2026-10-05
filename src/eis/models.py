@@ -25,6 +25,8 @@ class EventType(str, Enum):
     LABOR_STRIKE = "labor_strike"
     CYBERATTACK = "cyberattack"
     EARNINGS_CORPORATE = "earnings_corporate"
+    MERGER_ACQUISITION = "merger_acquisition"
+    SUPPLY_CHAIN_DISRUPTION = "supply_chain_disruption"
     GENERAL = "general"
 
 

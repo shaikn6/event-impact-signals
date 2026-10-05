@@ -176,6 +176,58 @@ _IMPACT_TABLE: dict[EventType, list[tuple[str, Direction, float, str]]] = {
             "Breach costs, liability, and reputational damage.",
         ),
     ],
+    EventType.MERGER_ACQUISITION: [
+        (
+            "acquisition_target",
+            Direction.UP,
+            0.8,
+            "Acquirers typically pay a premium over the pre-deal share price.",
+        ),
+        (
+            "acquiring_company",
+            Direction.MIXED,
+            0.5,
+            "Can rise on strategic fit or fall on deal-cost/integration risk.",
+        ),
+        (
+            "investment_banking_legal",
+            Direction.UP,
+            0.55,
+            "Advisory, legal, and due-diligence fees scale with deal volume.",
+        ),
+        (
+            "direct_competitors",
+            Direction.MIXED,
+            0.4,
+            "Can benefit from reduced competition or lose ground to a stronger combined rival.",
+        ),
+    ],
+    EventType.SUPPLY_CHAIN_DISRUPTION: [
+        (
+            "shipping_logistics",
+            Direction.UP,
+            0.55,
+            "Freight rates rise when capacity is constrained or rerouted.",
+        ),
+        (
+            "affected_manufacturers",
+            Direction.DOWN,
+            0.7,
+            "Production is directly constrained by missing parts or components.",
+        ),
+        (
+            "domestic_reshoring_plays",
+            Direction.UP,
+            0.45,
+            "Disruption renews interest in on-shore/near-shore manufacturing capacity.",
+        ),
+        (
+            "inventory_warehousing",
+            Direction.UP,
+            0.4,
+            "Firms build safety stock, raising demand for warehousing capacity.",
+        ),
+    ],
 }
 
 

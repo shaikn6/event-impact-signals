@@ -23,6 +23,20 @@ def test_pandemic_pharma_up_travel_down():
     assert impacts["airlines"] == Direction.DOWN
 
 
+def test_merger_acquisition_target_up_with_premium_rationale():
+    impacts = {si.sector: si.direction for si in get_sector_impacts(EventType.MERGER_ACQUISITION)}
+    assert impacts["acquisition_target"] == Direction.UP
+    assert impacts["acquiring_company"] == Direction.MIXED
+
+
+def test_supply_chain_disruption_manufacturers_down_logistics_up():
+    impacts = {
+        si.sector: si.direction for si in get_sector_impacts(EventType.SUPPLY_CHAIN_DISRUPTION)
+    }
+    assert impacts["affected_manufacturers"] == Direction.DOWN
+    assert impacts["shipping_logistics"] == Direction.UP
+
+
 def test_general_event_type_has_no_impacts():
     assert get_sector_impacts(EventType.GENERAL) == []
 

@@ -42,3 +42,15 @@ def test_tariff_vs_war_disambiguation():
     # "war" appears as a substring.
     event_type, _ = classify_event("New trade war tariff announced on imports")
     assert event_type == EventType.TRADE_TARIFF
+
+
+def test_merger_acquisition_headline_classified_correctly():
+    event_type, confidence = classify_event("Tech giant agrees to acquire rival in buyout deal")
+    assert event_type == EventType.MERGER_ACQUISITION
+    assert confidence > 0
+
+
+def test_supply_chain_disruption_headline_classified_correctly():
+    event_type, confidence = classify_event("Automakers warn of chip shortage and factory shutdown")
+    assert event_type == EventType.SUPPLY_CHAIN_DISRUPTION
+    assert confidence > 0
