@@ -34,6 +34,17 @@ from eis.models import EventType
 # conflict/punitive sanctions) — if one ever does, fix it the same way
 # "combat" was: either remove the word or add a scoped exclusion, backed
 # by the real headline that triggered it.
+# Words whose figurative use ("a flood of new shows", "a drought of
+# talent", "hacked together a prototype") is far more common in headlines
+# than the literal event. A phrase listed here only counts when NOT
+# immediately followed by the given regex — scoped exclusions that keep
+# the literal meaning ("flood hits Texas") while dropping the idiom.
+_NOT_FOLLOWED_BY: dict[str, str] = {
+    "flood": r"\s+of\b",
+    "drought": r"\s+of\b",
+    "hacked": r"\s+together\b",
+}
+
 _KEYWORDS: dict[EventType, list[str]] = {
     EventType.WAR_CONFLICT: [
         "war",
@@ -184,7 +195,9 @@ def classify_event(text: str) -> tuple[EventType, float]:
         score = sum(
             len(phrase.split())
             for phrase in phrases
-            if re.search(rf"\b{re.escape(phrase)}\b", lowered)
+            if re.search(
+                rf"\b{re.escape(phrase)}\b(?!{_NOT_FOLLOWED_BY.get(phrase, '(?!)')})", lowered
+            )
         )
         if score:
             scores[event_type] = score

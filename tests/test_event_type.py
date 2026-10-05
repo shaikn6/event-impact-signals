@@ -77,3 +77,24 @@ def test_merger_headline_with_plainer_buy_verb_classified_correctly():
 def test_merger_in_talks_to_acquire_classified_correctly():
     event_type, _ = classify_event("Software firm in talks to acquire smaller competitor")
     assert event_type == EventType.MERGER_ACQUISITION
+
+
+def test_figurative_flood_of_does_not_trigger_natural_disaster():
+    event_type, _ = classify_event("Flood of new streaming shows overwhelms viewers")
+    assert event_type == EventType.GENERAL
+
+
+def test_figurative_drought_of_does_not_trigger_natural_disaster():
+    event_type, _ = classify_event("Drought of talent hits tech hiring")
+    assert event_type == EventType.GENERAL
+
+
+def test_hacked_together_does_not_trigger_cyberattack():
+    event_type, _ = classify_event("Hacked together prototype wins hackathon prize")
+    assert event_type == EventType.GENERAL
+
+
+def test_literal_flood_and_drought_still_classified():
+    assert classify_event("Flood hits Texas as river rises")[0] == EventType.NATURAL_DISASTER
+    assert classify_event("Severe drought threatens crops")[0] == EventType.NATURAL_DISASTER
+    assert classify_event("Bank hacked, customer data stolen")[0] == EventType.CYBERATTACK
