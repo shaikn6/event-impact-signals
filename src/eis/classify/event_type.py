@@ -14,9 +14,26 @@ import re
 
 from eis.models import EventType
 
-# Keyword groups per event type. Multi-word phrases are checked as
-# substrings (not word-boundary tokens) so "trade war" still matches
-# "war_conflict" via its own phrase entry rather than requiring NLP.
+# Keyword groups per event type. Every phrase is matched with \b word
+# boundaries (see classify_event below) so e.g. "war" matches the word
+# "war" but not a substring inside "award"; "trade war" still separately
+# matches TRADE_TARIFF via its own phrase entry, and phrase-length
+# weighting (see classify_event) lets it outscore WAR_CONFLICT's bare
+# "war" when both match the same text.
+#
+# KNOWN, UNCONFIRMED RISK (documented, not fixed, per this project's own
+# rule of only changing keywords for a bug actually seen live — see
+# README "Known limitations"): a few single words below are plausibly
+# polysemous in ways that could misfire the way "combat" did (removed
+# after a real live false positive) — e.g. "war" in "price war"/"bidding
+# war" (business-competition idiom, not conflict), or "sanctions" used
+# as a verb meaning "approves" ("the board sanctions a buyback") rather
+# than the punitive-measure noun. Neither has been observed firing
+# incorrectly in this project's own live test runs so far (all real
+# "war"/"sanctions" hits during live testing were genuinely about
+# conflict/punitive sanctions) — if one ever does, fix it the same way
+# "combat" was: either remove the word or add a scoped exclusion, backed
+# by the real headline that triggered it.
 _KEYWORDS: dict[EventType, list[str]] = {
     EventType.WAR_CONFLICT: [
         "war",
