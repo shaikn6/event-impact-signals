@@ -65,7 +65,13 @@ def poll_once(store: SignalStore, include_reddit: bool = False) -> int:
             for i, query in enumerate(_GDELT_QUERIES):
                 if i > 0:
                     time.sleep(_GDELT_REQUEST_SPACING_SECONDS)
-                articles.extend(gdelt.fetch_articles(query, max_records=15, client=client))
+                # 40, not 15: found live that lower-frequency categories
+                # (merger/acquisition, supply-chain disruption) can go
+                # several minutes without appearing in a 15-article
+                # recent-sort window, while high-frequency categories
+                # (war, disaster) saturate it. A wider window costs
+                # nothing extra — it's the same single HTTP request.
+                articles.extend(gdelt.fetch_articles(query, max_records=40, client=client))
 
         articles.extend(rss_future.result())
 

@@ -75,7 +75,21 @@ you have to reason through by hand for every headline.
 - **The event classifier is keyword-based, not NLP.** It will miss events
   phrased without any of its trigger words, and a sarcastic or
   speculative headline ("could a war save the auto industry?") can fire
-  the same as a real one.
+  the same as a real one. Confirmed live and fixed: "combat" alone used
+  to trigger WAR_CONFLICT, misfiring on idiomatic headlines like "checks
+  to help combat inflation" — it's been removed from the keyword list in
+  favor of the more specific phrases already there.
+- **Some event categories are genuinely lower-frequency than others in
+  real news flow, independent of classifier quality.** War, natural
+  disaster, and pandemic coverage show up reliably within a single poll;
+  merger/acquisition and supply-chain-disruption headlines were absent
+  across three separate live test runs on this project's own
+  development day even with a widened 40-article GDELT sampling window
+  per query — not because the keywords are wrong (unit tests confirm
+  exact-match behavior for realistic headline phrasing), but because
+  those stories just don't break as continuously globally. Don't read a
+  quiet poll cycle for those categories as evidence the classifier is
+  broken.
 - **The sector-impact table encodes historical patterns, not guarantees.**
   A given real event can break any rule in it — a short, contained
   conflict with no supply disruption doesn't move oil the way a

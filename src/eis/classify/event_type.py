@@ -28,7 +28,12 @@ _KEYWORDS: dict[EventType, list[str]] = {
         "conflict escalates",
         "armed clash",
         "missile attack",
-        "combat",
+        # NOT "combat" alone — caught live misclassifying "help combat
+        # inflation"/"combat climate change" as armed conflict. Idiomatic
+        # "combat X" (fight against a problem) is far more common in
+        # headlines than literal military combat, so the bare word is a
+        # false-positive magnet; the more specific phrases above already
+        # catch genuine war coverage.
     ],
     EventType.NATURAL_DISASTER: [
         "earthquake",
@@ -117,6 +122,15 @@ _KEYWORDS: dict[EventType, list[str]] = {
         "takeover bid",
         "buyout deal",
         "to be acquired by",
+        # Added after a live test found real M&A headlines using plainer
+        # verbs ("X to buy Y") that none of the phrases above would
+        # catch — "to buy" alone would be too generic (share buybacks,
+        # routine purchases), so these stay anchored to deal language.
+        "agrees to buy",
+        "to be bought by",
+        "in talks to acquire",
+        "completes acquisition",
+        "merger deal",
     ],
     EventType.SUPPLY_CHAIN_DISRUPTION: [
         "chip shortage",

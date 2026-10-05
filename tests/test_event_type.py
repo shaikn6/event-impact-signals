@@ -54,3 +54,26 @@ def test_supply_chain_disruption_headline_classified_correctly():
     event_type, confidence = classify_event("Automakers warn of chip shortage and factory shutdown")
     assert event_type == EventType.SUPPLY_CHAIN_DISRUPTION
     assert confidence > 0
+
+
+def test_idiomatic_combat_phrase_does_not_trigger_war_conflict():
+    # Regression test: found live — "combat" used idiomatically ("help
+    # combat inflation") was misclassified as armed conflict before
+    # "combat" was removed from WAR_CONFLICT's keyword list.
+    event_type, confidence = classify_event("Checks announced to help combat rising costs")
+    assert event_type == EventType.GENERAL
+    assert confidence == 0.0
+
+
+def test_merger_headline_with_plainer_buy_verb_classified_correctly():
+    # Regression test: found live — real M&A headlines commonly use
+    # plainer verbs ("X agrees to buy Y") that the original phrase list
+    # ("to acquire", "agrees to merge", etc.) didn't cover.
+    event_type, confidence = classify_event("Retail giant agrees to buy rival chain in cash deal")
+    assert event_type == EventType.MERGER_ACQUISITION
+    assert confidence > 0
+
+
+def test_merger_in_talks_to_acquire_classified_correctly():
+    event_type, _ = classify_event("Software firm in talks to acquire smaller competitor")
+    assert event_type == EventType.MERGER_ACQUISITION
