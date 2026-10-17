@@ -70,6 +70,33 @@ you have to reason through by hand for every headline.
 - **Store + API** — new signals are deduplicated by URL into SQLite;
   FastAPI serves them read-only at `/signals`.
 
+## Evaluation
+
+The event classifier is measured on a small hand-labeled set of 34 headlines
+(`eval/eval_set.jsonl`): two to three per event type, four `general`
+("no tradable event") headlines, and four idiomatic **trap** headlines whose
+true label is `general` ("retailers enter a price war", "a flood of new
+streaming shows", "the board sanctions a buyback", "startup hacked together a
+prototype") so the score is not inflated by only clear keyword hits.
+
+`python eval/evaluate.py` (committed output in `eval/results.json`):
+
+- **Accuracy 70.6% (24 / 34).**
+- **Precision-oriented, recall-limited.** When it fires a category it is
+  usually right — precision is 1.0 for most event types — but it falls back
+  to `general` whenever its exact trigger words are absent, so recall on the
+  rarer-phrased categories is around 0.5. That is the keyword tradeoff, by
+  design, not a bug.
+- **Two of the three word-level traps misfired**, exactly as the code's own
+  comments flag as an unconfirmed risk: "price war" scored `war_conflict`
+  and "the board sanctions a buyback" scored `regulatory_sanction`. This
+  eval confirms that polysemy risk; it has not been patched (the project
+  only changes a keyword for a failure seen in live flow — see below).
+
+This is a sanity check on 34 synthetic-but-realistic headlines, not a
+benchmark on live news. It measures the keyword classifier, not a trained
+model.
+
 ## Known limitations (read before trusting any output)
 
 - **The event classifier is keyword-based, not NLP.** It will miss events

@@ -1,0 +1,137 @@
+{
+  "n": 34,
+  "accuracy": 0.706,
+  "correct": 24,
+  "per_class": {
+    "cyberattack": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 2
+    },
+    "earnings_corporate": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.667,
+      "support": 2
+    },
+    "energy_shock": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.667,
+      "support": 2
+    },
+    "general": {
+      "precision": 0.429,
+      "recall": 0.75,
+      "f1": 0.545,
+      "support": 8
+    },
+    "labor_strike": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.667,
+      "support": 2
+    },
+    "merger_acquisition": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.667,
+      "support": 2
+    },
+    "monetary_policy": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.667,
+      "support": 2
+    },
+    "natural_disaster": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 3
+    },
+    "pandemic_public_health": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.667,
+      "support": 2
+    },
+    "regulatory_sanction": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1": 0.5,
+      "support": 2
+    },
+    "supply_chain_disruption": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 2
+    },
+    "trade_tariff": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 2
+    },
+    "war_conflict": {
+      "precision": 0.667,
+      "recall": 0.667,
+      "f1": 0.667,
+      "support": 3
+    }
+  },
+  "confusions": [
+    {
+      "text": "US reinforcing military presence in Middle East as Iran tensions rise",
+      "gold": "war_conflict",
+      "pred": "general"
+    },
+    {
+      "text": "Hospitals strained as the virus surge overwhelms intensive care units",
+      "gold": "pandemic_public_health",
+      "pred": "general"
+    },
+    {
+      "text": "SEC fines the firm and bans two executives after a fraud probe",
+      "gold": "regulatory_sanction",
+      "pred": "general"
+    },
+    {
+      "text": "Central bank signals rate cuts as inflation cools",
+      "gold": "monetary_policy",
+      "pred": "general"
+    },
+    {
+      "text": "Natural gas supply shock sends energy prices soaring across Europe",
+      "gold": "energy_shock",
+      "pred": "general"
+    },
+    {
+      "text": "Autoworkers launch a strike, halting production at three plants",
+      "gold": "labor_strike",
+      "pred": "general"
+    },
+    {
+      "text": "Shares fall after the retailer misses revenue expectations",
+      "gold": "earnings_corporate",
+      "pred": "general"
+    },
+    {
+      "text": "The two carriers agree to merge in an all-stock deal",
+      "gold": "merger_acquisition",
+      "pred": "general"
+    },
+    {
+      "text": "Retailers enter a price war to win holiday shoppers",
+      "gold": "general",
+      "pred": "war_conflict"
+    },
+    {
+      "text": "The board sanctions a $2 billion share buyback program",
+      "gold": "general",
+      "pred": "regulatory_sanction"
+    }
+  ]
+}
