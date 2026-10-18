@@ -19,13 +19,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.5", "respx>=0.21"]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.5", "respx>=0.21", "scikit-learn>=1.4"]
 
 [project.scripts]
 eis = "eis.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+eis = ["classify/event_clf.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

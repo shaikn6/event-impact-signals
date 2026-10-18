@@ -1,0 +1,180 @@
+{
+  "train_n": 181,
+  "test_n": 108,
+  "test_class_counts": {
+    "cyberattack": 7,
+    "earnings_corporate": 7,
+    "energy_shock": 7,
+    "general": 22,
+    "labor_strike": 7,
+    "merger_acquisition": 7,
+    "monetary_policy": 7,
+    "natural_disaster": 8,
+    "pandemic_public_health": 7,
+    "regulatory_sanction": 7,
+    "supply_chain_disruption": 7,
+    "trade_tariff": 7,
+    "war_conflict": 8
+  },
+  "held_out_test": {
+    "always_general": {
+      "n": 108,
+      "accuracy": 0.204,
+      "correct": 22,
+      "macro_f1": 0.026
+    },
+    "keyword": {
+      "n": 108,
+      "accuracy": 0.444,
+      "correct": 48,
+      "macro_f1": 0.467
+    },
+    "trained": {
+      "n": 108,
+      "accuracy": 0.769,
+      "correct": 83,
+      "macro_f1": 0.771
+    }
+  },
+  "original_34": {
+    "keyword": {
+      "n": 34,
+      "accuracy": 0.706,
+      "correct": 24,
+      "macro_f1": 0.747
+    },
+    "trained": {
+      "n": 34,
+      "accuracy": 0.882,
+      "correct": 30,
+      "macro_f1": 0.867
+    }
+  },
+  "trained_errors": [
+    {
+      "text": "US reinforcing military presence in Middle East as Iran tensions rise",
+      "gold": "war_conflict",
+      "pred": "energy_shock"
+    },
+    {
+      "text": "Trade war intensifies as both sides raise import duties",
+      "gold": "trade_tariff",
+      "pred": "war_conflict"
+    },
+    {
+      "text": "Tech giant announces acquisition of the chip startup for $4 billion",
+      "gold": "merger_acquisition",
+      "pred": "general"
+    },
+    {
+      "text": "Factory shutdown triggers a supply chain disruption for automakers",
+      "gold": "supply_chain_disruption",
+      "pred": "energy_shock"
+    },
+    {
+      "text": "Bomber raids target supply depots behind enemy lines",
+      "gold": "war_conflict",
+      "pred": "energy_shock"
+    },
+    {
+      "text": "Tanks roll into the disputed region, prompting emergency Security Council session",
+      "gold": "war_conflict",
+      "pred": "general"
+    },
+    {
+      "text": "Flash floods sweep away cars as monsoon rains lash the south",
+      "gold": "natural_disaster",
+      "pred": "pandemic_public_health"
+    },
+    {
+      "text": "Bushfires force thousands to flee as temperatures soar",
+      "gold": "natural_disaster",
+      "pred": "war_conflict"
+    },
+    {
+      "text": "Hurricane threatens Florida with storm surge and destructive winds",
+      "gold": "natural_disaster",
+      "pred": "general"
+    },
+    {
+      "text": "Lava flows from the erupting volcano swallow homes on the island",
+      "gold": "natural_disaster",
+      "pred": "trade_tariff"
+    },
+    {
+      "text": "New variant detected in several countries, scientists urge caution",
+      "gold": "pandemic_public_health",
+      "pred": "general"
+    },
+    {
+      "text": "Ebola outbreak confirmed in a remote province, aid teams deployed",
+      "gold": "pandemic_public_health",
+      "pred": "general"
+    },
+    {
+      "text": "Exporters hit as the government restricts shipments of rare earth minerals",
+      "gold": "trade_tariff",
+      "pred": "pandemic_public_health"
+    },
+    {
+      "text": "Banking regulator imposes penalties over anti-money-laundering lapses",
+      "gold": "regulatory_sanction",
+      "pred": "general"
+    },
+    {
+      "text": "Antitrust enforcers move to break up the ticketing monopoly",
+      "gold": "regulatory_sanction",
+      "pred": "merger_acquisition"
+    },
+    {
+      "text": "Investors price in a December cut after soft jobs data",
+      "gold": "monetary_policy",
+      "pred": "general"
+    },
+    {
+      "text": "Governor says further tightening may be needed to bring prices under control",
+      "gold": "monetary_policy",
+      "pred": "general"
+    },
+    {
+      "text": "Oil jumps 6% after attack on a key export terminal",
+      "gold": "energy_shock",
+      "pred": "regulatory_sanction"
+    },
+    {
+      "text": "Union orders members to stop work at the assembly plants",
+      "gold": "labor_strike",
+      "pred": "general"
+    },
+    {
+      "text": "Flight attendants vote to authorize a strike ahead of the holiday",
+      "gold": "labor_strike",
+      "pred": "general"
+    },
+    {
+      "text": "Ransomware attack forces the school district to cancel classes",
+      "gold": "cyberattack",
+      "pred": "general"
+    },
+    {
+      "text": "Carmaker posts a surprise loss and suspends its dividend",
+      "gold": "earnings_corporate",
+      "pred": "general"
+    },
+    {
+      "text": "Retailer to be taken private in a leveraged buyout",
+      "gold": "merger_acquisition",
+      "pred": "general"
+    },
+    {
+      "text": "Drought-lowered river levels strand cargo barges and delay shipments",
+      "gold": "supply_chain_disruption",
+      "pred": "natural_disaster"
+    },
+    {
+      "text": "Freight costs spike as carriers cancel sailings",
+      "gold": "supply_chain_disruption",
+      "pred": "energy_shock"
+    }
+  ]
+}

@@ -58,8 +58,9 @@ you have to reason through by hand for every headline.
   (free, global news search, no API key), a curated RSS list (BBC,
   MarketWatch, Fox Business), and optionally Reddit (best-effort — see
   caveat below).
-- **Classify** — a deterministic keyword-rule classifier
-  (`classify/event_type.py`), not a trained model. Every category is an
+- **Classify** — by default a deterministic keyword-rule classifier
+  (`classify/event_type.py`); an opt-in trained model is described under
+  Evaluation. Every category is an
   explicit, auditable list of trigger phrases, scored by phrase
   specificity so e.g. "trade war" correctly outweighs the bare word "war"
   it contains. This trades some recall for the thing a research tool
@@ -94,12 +95,58 @@ prototype") so the score is not inflated by only clear keyword hits.
   only changes a keyword for a failure seen in live flow — see below).
 
 This is a sanity check on 34 synthetic-but-realistic headlines, not a
-benchmark on live news. It measures the keyword classifier, not a trained
-model.
+benchmark on live news. It measures the keyword classifier only.
+
+### Trained classifier vs keyword rules
+
+An opt-in trained classifier (`classify/trained.py`) is a TF-IDF (1-2 grams)
+plus logistic-regression model, fit on a **hand-labeled set of 181
+headlines** (`eval/train_set.jsonl`: 12 per event type, 37 `general`
+including idiom traps). The headlines were written by hand by the
+repo author; they are realistic but synthetic, not scraped news, and no public dataset was used
+because none maps onto these 13 classes (labor strikes, supply-chain
+disruption and so on). The regularisation strength was picked by 5-fold
+cross-validation inside the training set only.
+
+Both classifiers are scored on the same **108 held-out headlines** (the
+original 34 plus 74 new ones in `eval/test_extra.jsonl`; none appear in the
+training set, and `evaluate_trained.py` asserts that):
+
+| Held-out test (n=108) | Accuracy | Macro-F1 |
+|---|---|---|
+| Always predict `general` | 20.4% | 0.026 |
+| Keyword rules (default) | 44.4% (48/108) | 0.467 |
+| Trained TF-IDF + LR | 76.9% (83/108) | 0.771 |
+
+On the original 34-headline set alone: keyword 70.6% (macro-F1 0.747),
+trained 88.2% (macro-F1 0.867).
+
+Read this with care:
+
+- The 74 new test headlines were not tuned to the keyword list, so
+  many use wording the rules do not contain; that is why keyword
+  accuracy falls from 70.6% to 44.4% on the larger set. A test built
+  from live news would give different numbers for both models.
+- Training and test headlines share one author and one style, and the
+  idiom traps ("price war", "a flood of ...") appear in both, so the
+  trained score is probably optimistic for real headlines.
+- 108 test rows is small; one headline is about 0.9 points. 25 headlines
+  are still wrong, and the trained model misses clear single-keyword cases
+  the rules catch (for example "Ransomware attack forces the school
+  district to cancel classes" -> `general`). A hybrid of the two is an
+  obvious next step and is not built.
+- Confidence is a softmax probability and is not calibrated.
+
+Reproduce: `python eval/train_classifier.py` (needs scikit-learn, in the
+`dev` extra) rewrites the 329 KB weight file `src/eis/classify/event_clf.json`;
+`python eval/evaluate_trained.py` rewrites `eval/results_comparison.json`.
+The runtime scorer is pure Python on that JSON (no pickle, no
+scikit-learn at inference). Opt in with `EIS_CLASSIFIER=trained`; the
+keyword classifier remains the default.
 
 ## Known limitations (read before trusting any output)
 
-- **The event classifier is keyword-based, not NLP.** It will miss events
+- **The default event classifier is keyword-based, not NLP.** It will miss events
   phrased without any of its trigger words, and a sarcastic or
   speculative headline ("could a war save the auto industry?") can fire
   the same as a real one. Confirmed live and fixed: "combat" alone used

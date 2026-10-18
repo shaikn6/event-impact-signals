@@ -3,6 +3,8 @@ a single list of EventSignal objects."""
 
 from __future__ import annotations
 
+import os
+
 from eis.classify.event_type import classify_event
 from eis.impact.sector_mapping import get_sector_impacts
 from eis.models import Article, EventSignal
@@ -11,7 +13,14 @@ from eis.models import Article, EventSignal
 def build_signal(article: Article) -> EventSignal:
     """Classify one article and attach its sector-impact hypotheses."""
     text = f"{article.title} {article.summary}"
-    event_type, confidence = classify_event(text)
+    # Keyword rules stay the default; EIS_CLASSIFIER=trained opts in to the
+    # TF-IDF + logistic-regression model (see classify/trained.py).
+    if os.environ.get("EIS_CLASSIFIER", "keyword") == "trained":
+        from eis.classify.trained import classify_event_trained
+
+        event_type, confidence = classify_event_trained(text)
+    else:
+        event_type, confidence = classify_event(text)
 
     # get_sector_impacts already returns [] for EventType.GENERAL (and any
     # other type absent from the table) via its dict.get(..., []) default —

@@ -1,0 +1,74 @@
+{"text": "Shelling resumes in the besieged city despite the truce announcement", "event_type": "war_conflict"}
+{"text": "Troops massed along the border as the president warns of retaliation", "event_type": "war_conflict"}
+{"text": "Bomber raids target supply depots behind enemy lines", "event_type": "war_conflict"}
+{"text": "Coalition forces launch an offensive to retake the northern province", "event_type": "war_conflict"}
+{"text": "Tanks roll into the disputed region, prompting emergency Security Council session", "event_type": "war_conflict"}
+{"text": "Powerful earthquake strikes off the coast, damaging roads and bridges", "event_type": "natural_disaster"}
+{"text": "Flash floods sweep away cars as monsoon rains lash the south", "event_type": "natural_disaster"}
+{"text": "Bushfires force thousands to flee as temperatures soar", "event_type": "natural_disaster"}
+{"text": "Hurricane threatens Florida with storm surge and destructive winds", "event_type": "natural_disaster"}
+{"text": "Lava flows from the erupting volcano swallow homes on the island", "event_type": "natural_disaster"}
+{"text": "Health ministry reports a spike in infections and reopens field hospitals", "event_type": "pandemic_public_health"}
+{"text": "New variant detected in several countries, scientists urge caution", "event_type": "pandemic_public_health"}
+{"text": "Ebola outbreak confirmed in a remote province, aid teams deployed", "event_type": "pandemic_public_health"}
+{"text": "Vaccination drive launched after cases of polio resurface", "event_type": "pandemic_public_health"}
+{"text": "Officials declare a public health emergency as the virus spreads", "event_type": "pandemic_public_health"}
+{"text": "Washington raises duties on Chinese electronics, prompting retaliation threats", "event_type": "trade_tariff"}
+{"text": "Trade ministers fail to settle the dispute over steel imports", "event_type": "trade_tariff"}
+{"text": "Bloc agrees a new trade deal that cuts levies on cars and machinery", "event_type": "trade_tariff"}
+{"text": "Exporters hit as the government restricts shipments of rare earth minerals", "event_type": "trade_tariff"}
+{"text": "President threatens fresh import taxes on all goods from Mexico", "event_type": "trade_tariff"}
+{"text": "EU slaps record fine on search giant for abusing its dominance", "event_type": "regulatory_sanction"}
+{"text": "Western governments widen sanctions on the sanctioned state's energy sector", "event_type": "regulatory_sanction"}
+{"text": "Banking regulator imposes penalties over anti-money-laundering lapses", "event_type": "regulatory_sanction"}
+{"text": "Antitrust enforcers move to break up the ticketing monopoly", "event_type": "regulatory_sanction"}
+{"text": "Government blacklists dozens of companies over human-rights concerns", "event_type": "regulatory_sanction"}
+{"text": "Fed signals it will keep rates higher for longer as inflation proves stubborn", "event_type": "monetary_policy"}
+{"text": "Central bank lowers its key rate for the first time in two years", "event_type": "monetary_policy"}
+{"text": "Investors price in a December cut after soft jobs data", "event_type": "monetary_policy"}
+{"text": "Governor says further tightening may be needed to bring prices under control", "event_type": "monetary_policy"}
+{"text": "ECB policymakers weigh a pause in rate increases", "event_type": "monetary_policy"}
+{"text": "Oil jumps 6% after attack on a key export terminal", "event_type": "energy_shock"}
+{"text": "Gas prices surge as cold weather and low supply collide", "event_type": "energy_shock"}
+{"text": "Fuel shortages hit filling stations after the refinery outage", "event_type": "energy_shock"}
+{"text": "Electricity costs soar as hydro output falls and demand rises", "event_type": "energy_shock"}
+{"text": "Crude benchmark slides as producers agree to pump more", "event_type": "energy_shock"}
+{"text": "Longshoremen walk out, halting container traffic at East Coast terminals", "event_type": "labor_strike"}
+{"text": "Hospital staff begin an indefinite strike over staffing levels", "event_type": "labor_strike"}
+{"text": "Union orders members to stop work at the assembly plants", "event_type": "labor_strike"}
+{"text": "Flight attendants vote to authorize a strike ahead of the holiday", "event_type": "labor_strike"}
+{"text": "Municipal workers down tools in a dispute over pensions", "event_type": "labor_strike"}
+{"text": "Hackers steal personal data of millions from the insurer", "event_type": "cyberattack"}
+{"text": "Ransomware attack forces the school district to cancel classes", "event_type": "cyberattack"}
+{"text": "Cloud provider hit by a massive denial-of-service attack", "event_type": "cyberattack"}
+{"text": "Utility discloses that attackers infiltrated its control systems", "event_type": "cyberattack"}
+{"text": "Exchange suspends withdrawals after a security breach drains funds", "event_type": "cyberattack"}
+{"text": "Tech giant's profit jumps 25% and sales beat forecasts", "event_type": "earnings_corporate"}
+{"text": "Retail chain cuts outlook after weak quarter, stock tumbles", "event_type": "earnings_corporate"}
+{"text": "Revenue falls short of estimates as advertising slows", "event_type": "earnings_corporate"}
+{"text": "Bank's net income rises on higher lending margins", "event_type": "earnings_corporate"}
+{"text": "Carmaker posts a surprise loss and suspends its dividend", "event_type": "earnings_corporate"}
+{"text": "Two drugmakers announce a $30 billion merger", "event_type": "merger_acquisition"}
+{"text": "Buyer offers a 40% premium to acquire the software maker", "event_type": "merger_acquisition"}
+{"text": "Rail operators agree to combine, creating a transcontinental network", "event_type": "merger_acquisition"}
+{"text": "Takeover talks end after the board rejects the improved offer", "event_type": "merger_acquisition"}
+{"text": "Retailer to be taken private in a leveraged buyout", "event_type": "merger_acquisition"}
+{"text": "Ships idle at anchor as port backlogs stretch for weeks", "event_type": "supply_chain_disruption"}
+{"text": "Chip supply crunch slows production of laptops and cars", "event_type": "supply_chain_disruption"}
+{"text": "Drought-lowered river levels strand cargo barges and delay shipments", "event_type": "supply_chain_disruption"}
+{"text": "Plant shutdown leaves manufacturers short of critical components", "event_type": "supply_chain_disruption"}
+{"text": "Freight costs spike as carriers cancel sailings", "event_type": "supply_chain_disruption"}
+{"text": "Local orchestra celebrates its hundredth anniversary", "event_type": "general"}
+{"text": "Highway reopens after months of repairs", "event_type": "general"}
+{"text": "Pop star surprises fans with a secret concert", "event_type": "general"}
+{"text": "Students win national robotics competition", "event_type": "general"}
+{"text": "Bakery chain introduces a pumpkin spice menu", "event_type": "general"}
+{"text": "Rookie quarterback leads his team to a comeback victory", "event_type": "general"}
+{"text": "Local farm offers pick-your-own apples this weekend", "event_type": "general"}
+{"text": "The coach says the team is fighting for a playoff spot", "event_type": "general"}
+{"text": "Streaming platform sees a flood of fans for the finale", "event_type": "general"}
+{"text": "Consumers aren't shy about a price war between supermarket chains", "event_type": "general"}
+{"text": "Committee sanctions the proposal to extend the bike lane", "event_type": "general"}
+{"text": "Hackers and makers gather for a weekend coding festival", "event_type": "general"}
+{"text": "Mayor vows to combat litter with a new cleanup campaign", "event_type": "general"}
+{"text": "Marketing team launches a blitz campaign for the new sneaker", "event_type": "general"}
