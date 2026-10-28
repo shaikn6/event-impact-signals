@@ -56,7 +56,7 @@ def main() -> None:
             )
             thread.start()
 
-        uvicorn.run(api.app, host="0.0.0.0", port=args.port)
+        uvicorn.run(api.create_app(args.db_path), host="0.0.0.0", port=args.port)
 
 
 if __name__ == "__main__":

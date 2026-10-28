@@ -37,3 +37,10 @@ def test_fetch_all_flattens_multiple_feeds(monkeypatch):
     articles = fetch_all({"feed_a": "https://a.example.com", "feed_b": "https://b.example.com"})
     assert len(articles) == 2
     assert {a.source for a in articles} == {"rss:feed_a", "rss:feed_b"}
+
+
+def test_fetch_feed_warns_when_an_error_yields_no_articles(monkeypatch, caplog):
+    original_parse = feedparser.parse
+    monkeypatch.setattr(feedparser, "parse", lambda *a, **k: original_parse("not xml at all"))
+    fetch_feed("broken", "https://unused.example.com/rss")
+    assert "RSS feed broken returned 0 articles" in caplog.text

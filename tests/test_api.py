@@ -1,13 +1,16 @@
+import sys
+
 import pytest
+import uvicorn
 from fastapi.testclient import TestClient
 
-from eis import api
+from eis import api, cli
 from eis.models import Article, Direction, EventSignal, EventType, SectorImpact
 from eis.store import SignalStore
 
 
 @pytest.fixture
-def client(tmp_path, monkeypatch):
+def client(tmp_path):
     store = SignalStore(tmp_path / "test.db")
     store.save_new(
         [
@@ -23,8 +26,7 @@ def client(tmp_path, monkeypatch):
             )
         ]
     )
-    monkeypatch.setattr(api, "_store", store)
-    return TestClient(api.app)
+    return TestClient(api.create_app(tmp_path / "test.db"))
 
 
 def test_health_endpoint(client):
@@ -51,3 +53,30 @@ def test_signals_endpoint_respects_limit_param(client):
 def test_signals_endpoint_rejects_invalid_limit(client):
     response = client.get("/signals?limit=0")
     assert response.status_code == 422
+
+
+def test_serve_db_path_reaches_the_api(tmp_path, monkeypatch):
+    # Regression: `eis serve --db-path X` used to start the poller on X while
+    # the API kept reading data/signals.db, so /signals returned [].
+    monkeypatch.chdir(tmp_path)
+    db_path = tmp_path / "custom.db"
+    store = SignalStore(db_path)
+    store.save_new(
+        [
+            EventSignal(
+                article=Article(title="Custom DB signal", url="https://a.com/2", source="test"),
+                event_type=EventType.WAR_CONFLICT,
+                event_confidence=0.9,
+                sector_impacts=[],
+            )
+        ]
+    )
+    store.close()
+
+    served = {}
+    monkeypatch.setattr(uvicorn, "run", lambda app, **kwargs: served.update(app=app))
+    monkeypatch.setattr(sys, "argv", ["eis", "serve", "--no-live", "--db-path", str(db_path)])
+    cli.main()
+
+    body = TestClient(served["app"]).get("/signals").json()
+    assert [s["title"] for s in body] == ["Custom DB signal"]

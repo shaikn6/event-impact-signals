@@ -7,12 +7,15 @@ signal-to-noise feed for mainstream financial/world news.
 
 from __future__ import annotations
 
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 
 import feedparser
 
 from eis.models import Article
+
+logger = logging.getLogger(__name__)
 
 # Curated, free, no-auth financial/world-news RSS feeds.
 DEFAULT_FEEDS: dict[str, str] = {
@@ -32,10 +35,16 @@ def fetch_feed(feed_name: str, feed_url: str, timeout: float = 10.0) -> list[Art
     """
     try:
         parsed = feedparser.parse(feed_url, request_headers={"User-Agent": "event-impact-signals"})
-    except OSError:  # network failure (feedparser wraps urllib's own OSError subclasses)
+    except OSError as exc:  # network failure (feedparser wraps urllib's own OSError subclasses)
+        logger.warning("RSS feed %s returned 0 articles: %s", feed_name, exc)
         return []
 
     if parsed.bozo and not parsed.entries:
+        # Warn rather than stay silent: on macOS python.org builds without
+        # certificates installed this is every feed failing TLS verification.
+        logger.warning(
+            "RSS feed %s returned 0 articles: %r", feed_name, parsed.get("bozo_exception")
+        )
         return []
 
     articles = []

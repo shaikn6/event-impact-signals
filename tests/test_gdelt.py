@@ -1,4 +1,5 @@
 import inspect
+from collections import Counter
 
 import httpx
 import respx
@@ -91,3 +92,35 @@ def test_fetch_json_without_client_still_works():
     # fallback path (used when no shared client is passed) is intact.
     respx.get("https://example.com/plain").mock(return_value=httpx.Response(200, json={"ok": 1}))
     assert fetch_json("https://example.com/plain") == {"ok": 1}
+
+
+@respx.mock
+def test_fetch_articles_retries_429_honouring_retry_after(monkeypatch):
+    sleeps = []
+    monkeypatch.setattr("eis.ingest.gdelt.time.sleep", sleeps.append)
+    respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
+        side_effect=[
+            httpx.Response(429, headers={"Retry-After": "7"}, text="Please limit requests"),
+            httpx.Response(200, json={"articles": [{"url": "https://e.com/a", "title": "x"}]}),
+        ]
+    )
+    stats = Counter()
+    articles = fetch_articles("war", stats=stats)
+    assert len(articles) == 1
+    assert sleeps == [7.0]
+    assert stats == Counter(rate_limited=1)
+
+
+@respx.mock
+def test_fetch_articles_drops_query_after_capped_retries(monkeypatch, caplog):
+    sleeps = []
+    monkeypatch.setattr("eis.ingest.gdelt.time.sleep", sleeps.append)
+    route = respx.get("https://api.gdeltproject.org/api/v2/doc/doc").mock(
+        return_value=httpx.Response(429, text="Please limit requests")
+    )
+    stats = Counter()
+    assert fetch_articles("war", stats=stats) == []
+    assert route.call_count == 3
+    assert sleeps == [10.0, 20.0]
+    assert stats == Counter(rate_limited=3, dropped=1)
+    assert sum("GDELT 429" in r.message for r in caplog.records) == 3
