@@ -9,14 +9,26 @@ for the full query syntax.
 
 from __future__ import annotations
 
+import logging
+import time
+from collections import Counter
 from datetime import UTC, datetime
 
 import httpx
 
-from eis.ingest._http import fetch_json
 from eis.models import Article
 
+logger = logging.getLogger(__name__)
+
 _BASE_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
+
+# GDELT answers HTTP 429 even at its documented 5s spacing (seen live on
+# 4-6 of 7 queries per poll). Retry a couple of times with backoff instead
+# of silently dropping the query, but cap both the count and the wait so a
+# throttled cycle can't stall the poller or hammer the API.
+_MAX_RETRIES = 2
+_BACKOFF_SECONDS = 10.0
+_MAX_RETRY_AFTER_SECONDS = 60.0
 
 
 def fetch_articles(
@@ -24,6 +36,7 @@ def fetch_articles(
     max_records: int = 25,
     timeout: float = 25.0,
     client: httpx.Client | None = None,
+    stats: Counter | None = None,
 ) -> list[Article]:
     """Fetch recent English-language articles matching a GDELT query.
 
@@ -40,6 +53,9 @@ def fetch_articles(
                      across repeated calls (e.g. scheduler.py's 5 GDELT
                      queries per poll) to reuse one connection instead of
                      a fresh TCP/TLS handshake per call.
+        stats:       Optional Counter; incremented under "rate_limited" for
+                     every HTTP 429 and "dropped" for a query given up on
+                     after retries, so the caller can report them.
 
     Returns:
         List of Article. Returns an empty list (not an exception) on a
@@ -57,8 +73,32 @@ def fetch_articles(
         "format": "json",
     }
 
-    payload = fetch_json(_BASE_URL, params=params, timeout=timeout, client=client)
-    if payload is None:
+    stats = stats if stats is not None else Counter()
+    getter = client.get if client is not None else httpx.get
+    for attempt in range(_MAX_RETRIES + 1):
+        try:
+            response = getter(_BASE_URL, params=params, timeout=timeout)
+        except httpx.HTTPError:
+            return []
+        if response.status_code != 429:
+            break
+        stats["rate_limited"] += 1
+        if attempt == _MAX_RETRIES:
+            stats["dropped"] += 1
+            logger.warning(
+                "GDELT 429 for %r on attempt %d; query dropped this cycle", query, attempt + 1
+            )
+            return []
+        delay = _retry_delay(response, attempt)
+        logger.warning(
+            "GDELT 429 for %r on attempt %d; retrying in %.0fs", query, attempt + 1, delay
+        )
+        time.sleep(delay)
+
+    try:
+        response.raise_for_status()
+        payload = response.json()
+    except (httpx.HTTPError, ValueError):
         return []
 
     articles = []
@@ -73,6 +113,15 @@ def fetch_articles(
             )
         )
     return articles
+
+
+def _retry_delay(response: httpx.Response, attempt: int) -> float:
+    """Seconds to wait before retrying: Retry-After (seconds form) if sent, else backoff."""
+    try:
+        delay = float(response.headers["Retry-After"])
+    except (KeyError, ValueError):
+        delay = _BACKOFF_SECONDS * 2**attempt
+    return min(max(delay, 0.0), _MAX_RETRY_AFTER_SECONDS)
 
 
 def _parse_gdelt_date(raw: str | None) -> datetime | None:

@@ -23,21 +23,82 @@ but hurts real estate and growth-tech valuations. This project surfaces
 that reshuffling as structured data instead of leaving it as something
 you have to reason through by hand for every headline.
 
+Example: a real BBC World headline from a live poll on 2026-10-28, run
+through the default keyword classifier on its **title alone** (the poller
+classifies title plus RSS summary, which can score differently). After
+`pip install -e .`:
+
+```bash
+python - <<'EOF'
+import json
+from eis.models import Article
+from eis.pipeline import build_signal
+
+article = Article(
+    title="Ceasefire extended across Ukraine's Kherson region, officials say",
+    url="https://www.bbc.co.uk/news/articles/c6lye1w9p2l8o",
+    source="rss:bbc_world",
+)
+print(json.dumps(build_signal(article).to_dict(), indent=2))
+EOF
+```
+
+Output, pasted from that run:
+
 ```json
 {
-  "title": "US Reinforcing Military Presence In Middle East As Iran Tensions Rise",
+  "title": "Ceasefire extended across Ukraine's Kherson region, officials say",
+  "url": "https://www.bbc.co.uk/news/articles/c6lye1w9p2l8o",
+  "source": "rss:bbc_world",
+  "country": null,
+  "published_at": null,
   "event_type": "war_conflict",
-  "event_confidence": 0.67,
+  "event_confidence": 0.33,
   "sector_impacts": [
-    {"sector": "defense", "direction": "up", "confidence": 0.8,
-     "rationale": "Military spending rises during active conflicts."},
-    {"sector": "energy_oil_gas", "direction": "up", "confidence": 0.7,
-     "rationale": "Supply-disruption risk pushes oil/gas prices up."},
-    {"sector": "airlines", "direction": "down", "confidence": 0.7,
-     "rationale": "Route disruption and fuel-cost spikes hurt margins."}
+    {
+      "sector": "defense",
+      "direction": "up",
+      "confidence": 0.8,
+      "rationale": "Military spending rises during active conflicts."
+    },
+    {
+      "sector": "energy_oil_gas",
+      "direction": "up",
+      "confidence": 0.7,
+      "rationale": "Supply-disruption risk pushes oil/gas prices up."
+    },
+    {
+      "sector": "gold_safe_haven",
+      "direction": "up",
+      "confidence": 0.6,
+      "rationale": "Flight-to-safety demand rises during conflict."
+    },
+    {
+      "sector": "airlines",
+      "direction": "down",
+      "confidence": 0.7,
+      "rationale": "Route disruption and fuel-cost spikes hurt margins."
+    },
+    {
+      "sector": "tourism_hospitality",
+      "direction": "down",
+      "confidence": 0.6,
+      "rationale": "Safety concerns reduce travel to the region."
+    },
+    {
+      "sector": "shipping_freight",
+      "direction": "mixed",
+      "confidence": 0.5,
+      "rationale": "Rerouting raises rates but adds cost and risk."
+    }
   ]
 }
 ```
+
+`event_confidence` 0.33 means one matched keyword ("ceasefire"); confidence
+saturates at three. The example also shows a real limit: the keyword rules
+do not tell escalation from de-escalation, so a ceasefire still maps to the
+war-conflict impact table.
 
 ## How it works
 
@@ -69,7 +130,9 @@ you have to reason through by hand for every headline.
   not a trained model. It's deliberately data, not code, so the mapping
   itself can be read, debated, and extended without touching any logic.
 - **Store + API** — new signals are deduplicated by URL into SQLite;
-  FastAPI serves them read-only at `/signals`.
+  FastAPI serves them read-only at `/signals`. `eis poll`, the `eis serve`
+  poller and its API all use the same `--db-path` (default
+  `data/signals.db`, relative to the current directory).
 
 ## Evaluation
 
@@ -175,14 +238,25 @@ keyword classifier remains the default.
   fetch is treated as "no new posts," never as an error. For reliable
   Reddit data, register a free API app and switch `ingest/reddit.py` to
   OAuth — that's a documented upgrade path, not implemented here.
-- **A poll cycle takes roughly two minutes, dominated by GDELT's own
-  response latency, not sleep overhead.** GDELT rate-limits to one
-  request per ~5 seconds (the scheduler spaces its 7 queries accordingly
-  — don't lower `_GDELT_REQUEST_SPACING_SECONDS` without checking GDELT's
-  current terms), but measured against the live API, GDELT's own
-  response time regularly runs ~12-14s per request even when it
-  succeeds — that's the real bottleneck, and the required spacing forces
-  those 7 requests to stay sequential against the same host. The
+- **GDELT still rate-limits at the 5-second spacing, and some queries
+  are lost.** GDELT asks for one request per ~5 seconds and the scheduler
+  spaces its 7 queries accordingly (don't lower
+  `_GDELT_REQUEST_SPACING_SECONDS` without checking GDELT's current
+  terms), but that does not prevent HTTP 429: in live polls on
+  2026-10-28, 4 to 6 of the 7 first attempts got 429. Each 429 is now
+  logged and retried at most twice (waiting for `Retry-After` if GDELT
+  sends one, capped at 60 s, otherwise 10 s then 20 s); a query still
+  throttled after that is dropped for the cycle. The poll summary line
+  reports both, e.g. `GDELT 429 responses: 13, queries dropped: 3 of 7`
+  from a live poll where the retries recovered 3 of the 6 throttled
+  queries.
+- **A poll cycle takes about two minutes without throttling and longer
+  with retries, dominated by GDELT, not by sleep overhead.**
+  Measured against the live API, GDELT's own response time regularly
+  runs ~12-14s per request even when it succeeds, and the required
+  spacing forces the 7 requests to stay sequential against the same
+  host; the retry waits above add to that (the throttled poll quoted
+  above took 6 min 25 s). The
   independent RSS fetch runs concurrently with all of that instead of
   after it, and the 7 GDELT queries share one `httpx.Client` connection
   to avoid a repeated TLS handshake — real but modest savings (RSS
@@ -192,6 +266,14 @@ keyword classifier remains the default.
   discarding good, slow-but-successful GDELT responses as failures.
 
 ## Quick start
+
+macOS note: with the python.org installer, Python's own TLS (used by
+`feedparser`) fails certificate verification until certificates are
+installed, so every RSS feed returns 0 articles; the poller now logs a
+warning per feed instead of staying silent. GDELT goes through `httpx` and
+its bundled certificates, so it is not affected. Run
+`/Applications/Python 3.x/Install Certificates.command` once (3.x is your
+version), or set `SSL_CERT_FILE=/etc/ssl/cert.pem`.
 
 ```bash
 pip install -e ".[dev]"
@@ -212,8 +294,9 @@ pytest tests/ -q
 ```
 
 All network calls are mocked in tests (`respx` for HTTP, `monkeypatch` for
-`feedparser`) — the suite runs in well under a second and needs no live
-network access or API keys.
+`feedparser`) — the suite runs in about 2 seconds on an M2 Pro, needs no
+live network access or API keys, and writes its SQLite files under
+pytest's temporary directories, so it leaves nothing in the repo.
 
 ## License
 

@@ -10,13 +10,15 @@ from __future__ import annotations
 
 import logging
 import time
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import httpx
 
 from eis.ingest import gdelt, rss
 from eis.pipeline import build_signals, filter_actionable
-from eis.store import SignalStore
+from eis.store import DEFAULT_DB_PATH, SignalStore
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +37,10 @@ _GDELT_QUERIES = [
 ]
 
 # GDELT asks that requests be spaced at least 5s apart; firing several
-# queries back-to-back gets every request after the first rate-limited
-# (a plain-text response, not JSON, which fetch_articles then correctly
-# treats as "no data" — so the failure is silent unless you space requests).
+# queries back-to-back gets every request after the first rate-limited.
+# The spacing reduces but does not prevent HTTP 429s (seen live on 4-6 of
+# 7 queries), so gdelt.fetch_articles also retries with backoff and the
+# poll summary reports how many 429s and dropped queries there were.
 _GDELT_REQUEST_SPACING_SECONDS = 5.0
 
 
@@ -51,6 +54,7 @@ def poll_once(store: SignalStore, include_reddit: bool = False) -> int:
                          scheduled run doesn't depend on a flaky source.
     """
     articles = []
+    gdelt_stats: Counter = Counter()
     # RSS is independent, different-host I/O with no relationship to
     # GDELT's rate limit — run it in the background so it overlaps with
     # the GDELT loop below instead of adding its own time after it. The
@@ -71,7 +75,9 @@ def poll_once(store: SignalStore, include_reddit: bool = False) -> int:
                 # recent-sort window, while high-frequency categories
                 # (war, disaster) saturate it. A wider window costs
                 # nothing extra — it's the same single HTTP request.
-                articles.extend(gdelt.fetch_articles(query, max_records=40, client=client))
+                articles.extend(
+                    gdelt.fetch_articles(query, max_records=40, client=client, stats=gdelt_stats)
+                )
 
         articles.extend(rss_future.result())
 
@@ -84,15 +90,19 @@ def poll_once(store: SignalStore, include_reddit: bool = False) -> int:
     signals = filter_actionable(build_signals(articles))
     inserted = store.save_new(signals)
     logger.info(
-        "poll_once: fetched %d articles, %d actionable signals, %d new",
+        "poll_once: fetched %d articles, %d actionable signals, %d new; "
+        "GDELT 429 responses: %d, queries dropped: %d of %d",
         len(articles),
         len(signals),
         inserted,
+        gdelt_stats["rate_limited"],
+        gdelt_stats["dropped"],
+        len(_GDELT_QUERIES),
     )
     return inserted
 
 
-def run_scheduler(interval_minutes: int = 15, db_path: str = "data/signals.db") -> None:
+def run_scheduler(interval_minutes: int = 15, db_path: str | Path = DEFAULT_DB_PATH) -> None:
     """Blocking loop: poll every `interval_minutes` using APScheduler.
 
     interval_minutes defaults to 15 to match GDELT's own update cadence —

@@ -1,10 +1,9 @@
 """Shared HTTP-GET-JSON helper for the ingest modules.
 
-gdelt.py and reddit.py both do the same thing — GET a URL, raise on a bad
-status, parse JSON, and treat any failure (network error or malformed
-body) as "no data" rather than an exception the caller has to handle.
-This factors that one policy into one place instead of two near-identical
-try/except blocks.
+GET a URL, raise on a bad status, parse JSON, and treat any failure
+(network error or malformed body) as "no data" rather than an exception
+the caller has to handle. reddit.py uses it; gdelt.py has its own request
+loop because it retries HTTP 429 with backoff.
 """
 
 from __future__ import annotations
