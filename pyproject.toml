@@ -20,6 +20,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.5", "respx>=0.21", "scikit-learn>=1.4"]
+# Opt-in sentence-embedding classifier (EIS_CLASSIFIER=embedding).
+embed = ["torch>=2.2", "transformers>=4.40"]
 
 [project.scripts]
 eis = "eis.cli:main"
