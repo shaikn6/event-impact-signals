@@ -1,11 +1,20 @@
 # event-impact-signals
 
-A research tool that classifies real-world events (war, natural disaster,
+[![CI](https://github.com/shaikn6/event-impact-signals/actions/workflows/ci.yml/badge.svg)](https://github.com/shaikn6/event-impact-signals/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](pyproject.toml)
+
+**A research tool that classifies real-world events (war, natural disaster,
 pandemic, trade dispute, monetary policy, energy shock, labor strike,
 cyberattack, mergers & acquisitions, supply chain disruption) from live
 news, and maps each one to the sectors it has historically tended to help
 or hurt — with a direction, confidence, and a one-line rationale for
-every impact it reports.
+every impact it reports.**
+
+Classification is a deterministic keyword-rule classifier by default (an
+opt-in TF-IDF + logistic-regression model is described under
+[Evaluation](#evaluation)); the event-to-sector mapping is a hand-curated
+table. To run it, see [Quickstart](#quickstart).
 
 **This is a signal/research surface, not investment advice.** Every output
 is a documented hypothesis ("war raises defense spending and oil-supply
@@ -102,17 +111,22 @@ war-conflict impact table.
 
 ## How it works
 
-```
-  ingest/           classify/            impact/
-  gdelt.py    ──┐    event_type.py  ──┐   sector_mapping.py
-  rss.py      ──┼──▶ (keyword rules,  │   (documented event→sector
-  reddit.py   ──┘     closed category │    hypothesis table)
-                       set)            │
-                            │           ▼
-                            └──▶ pipeline.py ──▶ store.py (SQLite)
-                                                       │
-                                                       ▼
-                                              api.py (FastAPI, read-only)
+```mermaid
+flowchart LR
+    subgraph ING["ingest/"]
+        G["gdelt.py<br/>GDELT news search"]
+        R["rss.py<br/>curated RSS feeds"]
+        RD["reddit.py<br/>optional, best-effort"]
+    end
+    CLI["cli.py<br/>eis poll / eis serve"] --> SCH["scheduler.py<br/>poll_once; run_scheduler every 15 min"]
+    ING --> SCH
+    SCH --> PIPE["pipeline.py<br/>build_signals"]
+    PIPE --> KW["classify/event_type.py<br/>keyword rules (default)"]
+    PIPE -.->|"EIS_CLASSIFIER=trained"| TR["classify/trained.py<br/>TF-IDF + logistic regression"]
+    PIPE --> MAP["impact/sector_mapping.py<br/>event-to-sector table"]
+    SCH --> ST[("store.py<br/>SQLite, dedup by URL")]
+    ST --> API["api.py<br/>FastAPI, read-only /signals"]
+    CLI --> API
 ```
 
 - **Ingest** — pulls live articles from [GDELT](https://blog.gdeltproject.org/gdelt-doc-2-0-api/)
@@ -287,7 +301,7 @@ scikit-learn at inference). Opt in with `EIS_CLASSIFIER=trained` or
   10s, specifically because a 10s timeout was measured silently
   discarding good, slow-but-successful GDELT responses as failures.
 
-## Quick start
+## Quickstart
 
 macOS note: with the python.org installer, Python's own TLS (used by
 `feedparser`) fails certificate verification until certificates are
