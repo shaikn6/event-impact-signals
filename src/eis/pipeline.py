@@ -14,11 +14,17 @@ def build_signal(article: Article) -> EventSignal:
     """Classify one article and attach its sector-impact hypotheses."""
     text = f"{article.title} {article.summary}"
     # Keyword rules stay the default; EIS_CLASSIFIER=trained opts in to the
-    # TF-IDF + logistic-regression model (see classify/trained.py).
-    if os.environ.get("EIS_CLASSIFIER", "keyword") == "trained":
+    # TF-IDF + logistic-regression model (see classify/trained.py) and
+    # EIS_CLASSIFIER=embedding to the sentence-embedding model (classify/embedding.py).
+    choice = os.environ.get("EIS_CLASSIFIER", "keyword")
+    if choice == "trained":
         from eis.classify.trained import classify_event_trained
 
         event_type, confidence = classify_event_trained(text)
+    elif choice == "embedding":
+        from eis.classify.embedding import classify_event_embedding
+
+        event_type, confidence = classify_event_embedding(text)
     else:
         event_type, confidence = classify_event(text)
 

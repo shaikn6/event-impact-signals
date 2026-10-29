@@ -34,8 +34,18 @@
       "accuracy": 0.769,
       "correct": 83,
       "macro_f1": 0.771
+    },
+    "embedding": {
+      "n": 108,
+      "accuracy": 0.944,
+      "correct": 102,
+      "macro_f1": 0.947
     }
   },
+  "embedding_minus_trained_accuracy_ci95": [
+    0.093,
+    0.259
+  ],
   "original_34": {
     "keyword": {
       "n": 34,
@@ -48,6 +58,12 @@
       "accuracy": 0.882,
       "correct": 30,
       "macro_f1": 0.867
+    },
+    "embedding": {
+      "n": 34,
+      "accuracy": 0.971,
+      "correct": 33,
+      "macro_f1": 0.979
     }
   },
   "trained_errors": [
@@ -175,6 +191,38 @@
       "text": "Freight costs spike as carriers cancel sailings",
       "gold": "supply_chain_disruption",
       "pred": "energy_shock"
+    }
+  ],
+  "embedding_errors": [
+    {
+      "text": "The board sanctions a $2 billion share buyback program",
+      "gold": "general",
+      "pred": "regulatory_sanction"
+    },
+    {
+      "text": "Antitrust enforcers move to break up the ticketing monopoly",
+      "gold": "regulatory_sanction",
+      "pred": "merger_acquisition"
+    },
+    {
+      "text": "Investors price in a December cut after soft jobs data",
+      "gold": "monetary_policy",
+      "pred": "earnings_corporate"
+    },
+    {
+      "text": "Flight attendants vote to authorize a strike ahead of the holiday",
+      "gold": "labor_strike",
+      "pred": "general"
+    },
+    {
+      "text": "Exchange suspends withdrawals after a security breach drains funds",
+      "gold": "cyberattack",
+      "pred": "regulatory_sanction"
+    },
+    {
+      "text": "Committee sanctions the proposal to extend the bike lane",
+      "gold": "general",
+      "pred": "regulatory_sanction"
     }
   ]
 }

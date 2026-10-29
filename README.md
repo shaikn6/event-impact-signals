@@ -160,52 +160,74 @@ prototype") so the score is not inflated by only clear keyword hits.
 This is a sanity check on 34 synthetic-but-realistic headlines, not a
 benchmark on live news. It measures the keyword classifier only.
 
-### Trained classifier vs keyword rules
+### Trained classifiers vs keyword rules
 
-An opt-in trained classifier (`classify/trained.py`) is a TF-IDF (1-2 grams)
-plus logistic-regression model, fit on a **hand-labeled set of 181
+Two opt-in trained classifiers are fit on the same **hand-labeled set of 181
 headlines** (`eval/train_set.jsonl`: 12 per event type, 37 `general`
 including idiom traps). The headlines were written by hand by the
 repo author; they are realistic but synthetic, not scraped news, and no public dataset was used
 because none maps onto these 13 classes (labor strikes, supply-chain
-disruption and so on). The regularisation strength was picked by 5-fold
-cross-validation inside the training set only.
+disruption and so on). Each model's regularisation strength was picked by
+5-fold cross-validation inside the training set only.
 
-Both classifiers are scored on the same **108 held-out headlines** (the
+- **TF-IDF + logistic regression** (`classify/trained.py`): TF-IDF (1-2 grams)
+  plus logistic regression, scored in pure Python from a JSON weight file.
+- **Sentence embedding + logistic regression** (`classify/embedding.py`): a
+  frozen [BAAI/bge-small-en-v1.5](https://huggingface.co/BAAI/bge-small-en-v1.5)
+  encoder (33M parameters, MIT, pinned revision) turns the headline into a
+  384-number vector and a logistic-regression head (`event_clf_embed.json`)
+  maps it to an event type. Cross-validated accuracy inside the training set:
+  0.928, against 0.376 for TF-IDF.
+
+All three classifiers are scored on the same **108 held-out headlines** (the
 original 34 plus 74 new ones in `eval/test_extra.jsonl`; none appear in the
-training set, and `evaluate_trained.py` asserts that):
+training set, and `evaluate_trained.py` asserts that). The test set was
+scored once for the embedding model, after its settings were fixed on the
+training set:
 
 | Held-out test (n=108) | Accuracy | Macro-F1 |
 |---|---|---|
 | Always predict `general` | 20.4% | 0.026 |
 | Keyword rules (default) | 44.4% (48/108) | 0.467 |
 | Trained TF-IDF + LR | 76.9% (83/108) | 0.771 |
+| **Sentence embedding + LR** | **94.4% (102/108)** | **0.947** |
 
-On the original 34-headline set alone: keyword 70.6% (macro-F1 0.747),
-trained 88.2% (macro-F1 0.867).
+Embedding minus TF-IDF accuracy: +17.6 points, paired bootstrap 95% interval
++9.3 to +25.9 (2,000 resamples of the test headlines). On the original
+34-headline set alone: keyword 70.6% (macro-F1 0.747), TF-IDF 88.2%
+(macro-F1 0.867), embedding 97.1% (macro-F1 0.979).
 
 Read this with care:
 
 - The 74 new test headlines were not tuned to the keyword list, so
   many use wording the rules do not contain; that is why keyword
   accuracy falls from 70.6% to 44.4% on the larger set. A test built
-  from live news would give different numbers for both models.
+  from live news would give different numbers for all three models.
 - Training and test headlines share one author and one style, and the
   idiom traps ("price war", "a flood of ...") appear in both, so the
-  trained score is probably optimistic for real headlines.
-- 108 test rows is small; one headline is about 0.9 points. 25 headlines
-  are still wrong, and the trained model misses clear single-keyword cases
-  the rules catch (for example "Ransomware attack forces the school
-  district to cancel classes" -> `general`). A hybrid of the two is an
-  obvious next step and is not built.
+  trained scores are probably optimistic for real headlines.
+- 108 test rows is small; one headline is about 0.9 points, and the
+  embedding model's 94.4% has a 95% interval of roughly 88% to 97%. Its six
+  errors (listed in `eval/results_comparison.json`) are mostly word-sense
+  cases: "the board sanctions a buyback" and "committee sanctions the
+  proposal" read as regulatory sanctions, and a security breach that drains
+  an exchange reads as a regulatory action.
+- The TF-IDF model misses clear single-keyword cases the rules catch (for
+  example "Ransomware attack forces the school district to cancel classes"
+  -> `general`); the embedding model gets that one right.
 - Confidence is a softmax probability and is not calibrated.
+- The embedding model needs torch and transformers (`pip install -e ".[embed]"`)
+  and downloads the encoder (about 130 MB) on first use, so it is opt-in
+  and the default stays the dependency-free keyword classifier.
 
 Reproduce: `python eval/train_classifier.py` (needs scikit-learn, in the
 `dev` extra) rewrites the 329 KB weight file `src/eis/classify/event_clf.json`;
+`python eval/train_embedding_classifier.py` (needs the `dev` and `embed`
+extras) rewrites `src/eis/classify/event_clf_embed.json`;
 `python eval/evaluate_trained.py` rewrites `eval/results_comparison.json`.
-The runtime scorer is pure Python on that JSON (no pickle, no
-scikit-learn at inference). Opt in with `EIS_CLASSIFIER=trained`; the
-keyword classifier remains the default.
+The TF-IDF scorer is pure Python on its JSON (no pickle, no
+scikit-learn at inference). Opt in with `EIS_CLASSIFIER=trained` or
+`EIS_CLASSIFIER=embedding`; the keyword classifier remains the default.
 
 ## Known limitations (read before trusting any output)
 
