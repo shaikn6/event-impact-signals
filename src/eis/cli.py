@@ -57,6 +57,7 @@ def main() -> None:
             thread.start()
 
         import os
+
         host = os.getenv("EIS_HOST", "127.0.0.1")
         uvicorn.run(api.create_app(args.db_path), host=host, port=args.port)
 
